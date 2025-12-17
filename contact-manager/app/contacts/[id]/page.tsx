@@ -1,24 +1,65 @@
 import Link from 'next/link'
 import { prisma } from '../../../lib/prisma'
+import CopyField from '../../../components/CopyField'
 
 export default async function ContactPage({ params }: { params: { id: string } }) {
-  const contact = await prisma.contact.findUnique({ where: { id: params.id } })
-  if (!contact) return <div>Contact not found.</div>
+  const resolvedParams = await Promise.resolve(params)
+  const contact = await prisma.contact.findUnique({ where: { id: resolvedParams.id } })
+  if (!contact) {
+    return (
+      <section className="grid gap-4">
+        <div className="card p-6">
+          <div className="text-lg font-medium">Contact not found</div>
+          <div className="mt-1 text-sm text-slate-600">The contact may have been deleted.</div>
+          <div className="mt-4">
+            <Link className="btn-secondary" href="/contacts">
+              Back to contacts
+            </Link>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">{contact.name}</h2>
-        <div className="space-x-2">
-          <Link href={`/contacts/${contact.id}/edit`} className="text-blue-600">Edit</Link>
+    <section className="grid gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">{contact.name}</h2>
+          <p className="mt-1 text-sm text-slate-600">Contact details</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/contacts" className="btn-ghost">
+            Back
+          </Link>
+          <Link href={`/contacts/${contact.id}/edit`} className="btn-secondary">
+            Edit
+          </Link>
         </div>
       </div>
-      <div className="mt-4 bg-white p-4 rounded shadow-sm">
-        <p><strong>Email:</strong> {contact.email}</p>
-        <p><strong>Phone:</strong> {contact.phone || '—'}</p>
-        <p className="mt-2"><strong>Notes:</strong></p>
-        <p className="text-sm text-gray-700">{contact.notes || '—'}</p>
+
+      <div className="card p-6">
+        <div className="grid gap-4">
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Email</div>
+            <div className="mt-1">
+              <CopyField value={contact.email} />
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Phone</div>
+            <div className="mt-1">
+              <CopyField value={contact.phone || '—'} copy={Boolean(contact.phone)} />
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Notes</div>
+            <div className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">{contact.notes || '—'}</div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }

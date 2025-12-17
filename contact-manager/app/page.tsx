@@ -2,13 +2,27 @@ import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-4">Contact Manager</h1>
-      <p className="mb-6">A simple CRUD app to store and manage contacts.</p>
-      <div className="space-x-3">
-        <Link href="/contacts" className="px-4 py-2 bg-blue-600 text-white rounded">Open Contacts</Link>
-        <Link href="/contacts/new" className="px-4 py-2 bg-green-600 text-white rounded">Add Contact</Link>
+    <section className="grid gap-6">
+      <div className="card p-8">
+        <div className="max-w-2xl">
+          <p className="text-sm font-medium text-slate-600">House of EdTech · Assignment</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+            Manage your contacts in one place.
+          </h1>
+          <p className="mt-3 text-slate-600">
+            Create, view, and organize contacts with a clean UI, MongoDB Atlas persistence,
+            and optional GitHub sign-in.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/contacts" className="btn-primary">
+              Open Contacts
+            </Link>
+            <Link href="/contacts/new" className="btn-secondary">
+              Add Contact
+            </Link>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }

@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '../../../../lib/prisma'
 
 export async function GET(req: Request, context: any) {
-  const { id } = context.params as { id: string }
+  const resolvedParams = await Promise.resolve(context.params)
+  const { id } = resolvedParams as { id: string }
   const contact = await prisma.contact.findUnique({ where: { id } })
   if (!contact) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(contact)
@@ -10,18 +11,21 @@ export async function GET(req: Request, context: any) {
 
 export async function PATCH(req: Request, context: any) {
   try {
-    const { id } = context.params as { id: string }
+    const resolvedParams = await Promise.resolve(context.params)
+    const { id } = resolvedParams as { id: string }
     const body = await req.json()
     const updated = await prisma.contact.update({ where: { id }, data: body })
     return NextResponse.json(updated)
   } catch (err) {
-    return NextResponse.json({ error: 'Update failed' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Update failed'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
 export async function DELETE(req: Request, context: any) {
   try {
-    const { id } = context.params as { id: string }
+    const resolvedParams = await Promise.resolve(context.params)
+    const { id } = resolvedParams as { id: string }
     await prisma.contact.delete({ where: { id } })
     return NextResponse.json({ ok: true })
   } catch (err) {

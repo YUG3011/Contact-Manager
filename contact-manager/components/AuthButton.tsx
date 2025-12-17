@@ -11,7 +11,7 @@ export default function AuthButton() {
     return (
       <button
         onClick={() => signIn('github')}
-        className="px-3 py-1 bg-blue-600 text-white rounded"
+        className="btn-primary"
       >
         Sign in
       </button>
@@ -20,10 +20,12 @@ export default function AuthButton() {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm">{session.user?.name ?? session.user?.email}</span>
+      <span className="hidden text-sm text-slate-700 sm:block">
+        {session.user?.name ?? session.user?.email}
+      </span>
       <button
         onClick={() => signOut()}
-        className="px-3 py-1 bg-gray-200 text-gray-800 rounded"
+        className="btn-secondary"
       >
         Sign out
       </button>
