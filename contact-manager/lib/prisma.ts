@@ -1,6 +1,11 @@
 // If DATABASE_URL is not set (no MongoDB configured), provide an in-memory fallback
 let _prisma: any
 
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: any | undefined
+}
+
 if (!process.env.DATABASE_URL) {
   type Contact = {
     id: string
@@ -63,11 +68,6 @@ if (!process.env.DATABASE_URL) {
   // during local dev without a database.
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { PrismaClient } = require('@prisma/client') as typeof import('@prisma/client')
-
-  declare global {
-    // eslint-disable-next-line no-var
-    var prisma: InstanceType<typeof PrismaClient> | undefined
-  }
 
   _prisma = global.prisma || new PrismaClient()
   if (process.env.NODE_ENV !== 'production') global.prisma = _prisma

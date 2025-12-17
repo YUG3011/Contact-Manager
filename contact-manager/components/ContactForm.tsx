@@ -24,7 +24,7 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
     setError(null)
     const parsed = ContactSchema.safeParse(form)
     if (!parsed.success) {
-      setError(parsed.error.errors.map((x) => x.message).join(', '))
+      setError(parsed.error.issues.map((x) => x.message).join(', '))
       return
     }
 
