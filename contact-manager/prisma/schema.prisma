@@ -18,4 +18,5 @@ model Contact {
   birthdate String?
   notes   String?
   createdAt DateTime @default(now())
+  deletedAt DateTime?
 }

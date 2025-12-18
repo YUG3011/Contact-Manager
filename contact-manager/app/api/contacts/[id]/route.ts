@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache'
 export async function GET(req: Request, context: any) {
   const resolvedParams = await Promise.resolve(context.params)
   const { id } = resolvedParams as { id: string }
-  const contact = await prisma.contact.findUnique({ where: { id } })
+  const contact = await prisma.contact.findFirst({ where: { id, deletedAt: null } })
   if (!contact) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(contact)
 }
@@ -51,9 +51,29 @@ export async function DELETE(req: Request, context: any) {
   try {
     const resolvedParams = await Promise.resolve(context.params)
     const { id } = resolvedParams as { id: string }
-    await prisma.contact.delete({ where: { id } })
+    const url = new URL(req.url)
+    const force = url.searchParams.get('force') === '1'
+    if (force) {
+      await prisma.contact.delete({ where: { id } })
+    } else {
+      await prisma.contact.update({ where: { id }, data: { deletedAt: new Date() } })
+    }
+    revalidatePath('/contacts')
     return NextResponse.json({ ok: true })
   } catch (err) {
     return NextResponse.json({ error: 'Delete failed' }, { status: 500 })
+  }
+}
+
+export async function POST(req: Request, context: any) {
+  // POST on /api/contacts/:id is used to restore a soft-deleted contact
+  try {
+    const resolvedParams = await Promise.resolve(context.params)
+    const { id } = resolvedParams as { id: string }
+    await prisma.contact.update({ where: { id }, data: { deletedAt: null } })
+    revalidatePath('/contacts')
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    return NextResponse.json({ error: 'Restore failed' }, { status: 500 })
   }
 }

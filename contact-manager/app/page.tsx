@@ -13,6 +13,8 @@ export default function Home() {
             <ul className="list-inside list-disc space-y-1">
               <li>AI Smart Fill</li>
               <li>AI Name Suggest</li>
+              <li>Filter &amp; Search (professional search and filters)</li>
+              <li>Trash (soft-delete, restore, permanent delete)</li>
               <li>Email Auto‑Generator</li>
               <li>Duplicate Detection</li>
               <li>Create / Read / Update / Delete Contacts</li>

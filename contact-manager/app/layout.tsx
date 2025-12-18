@@ -1,6 +1,7 @@
 import './globals.css'
 import Providers from './providers'
 import AuthButton from '../components/AuthButton'
+import ThemeToggle from '../components/ThemeToggle'
 import Link from 'next/link'
 
 export const metadata = {
@@ -30,9 +31,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <Link href="/contacts/new" className="btn-ghost">
                       New
                     </Link>
+                    <Link href="/contacts/trash" className="btn-ghost">
+                      Trash
+                    </Link>
                   </nav>
                 </div>
-                <AuthButton />
+                <div className="flex items-center gap-3">
+                  <ThemeToggle />
+                  <AuthButton />
+                </div>
               </div>
             </header>
 

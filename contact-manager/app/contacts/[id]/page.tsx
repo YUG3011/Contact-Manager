@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '../../../lib/prisma'
 import CopyField from '../../../components/CopyField'
+import RestoreContactButton from '../../../components/RestoreContactButton'
 
 export default async function ContactPage({ params }: { params: { id: string } }) {
   const resolvedParams = await Promise.resolve(params)
@@ -32,9 +33,18 @@ export default async function ContactPage({ params }: { params: { id: string } }
           <Link href="/contacts" className="btn-ghost">
             Back
           </Link>
-          <Link href={`/contacts/${contact.id}/edit`} className="btn-secondary">
-            Edit
-          </Link>
+          {contact.deletedAt ? (
+            <>
+              <RestoreContactButton id={contact.id} />
+              <button className="btn-secondary opacity-60 cursor-not-allowed" title="Restore to edit" disabled>
+                Edit
+              </button>
+            </>
+          ) : (
+            <Link href={`/contacts/${contact.id}/edit`} className="btn-secondary">
+              Edit
+            </Link>
+          )}
         </div>
       </div>
 

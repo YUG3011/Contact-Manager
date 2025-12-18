@@ -1,6 +1,7 @@
 "use client"
 import Link from 'next/link'
 import DeleteContactButton from './DeleteContactButton'
+import RestoreContactButton from './RestoreContactButton'
 
 export default function ContactList({ contacts }: { contacts: any[] }) {
   function formatDate(value: any) {
@@ -53,7 +54,14 @@ export default function ContactList({ contacts }: { contacts: any[] }) {
               <Link href={`/contacts/${c.id}`} className="btn-secondary shrink-0">
                 View
               </Link>
-              <DeleteContactButton id={c.id} />
+              {c.deletedAt ? (
+                <>
+                  <RestoreContactButton id={c.id} />
+                  <DeleteContactButton id={c.id} force />
+                </>
+              ) : (
+                <DeleteContactButton id={c.id} />
+              )}
             </div>
           </div>
         ))}

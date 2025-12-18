@@ -1,8 +1,56 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '../../../lib/prisma'
 
-export async function GET() {
-  const contacts = await prisma.contact.findMany({ orderBy: { createdAt: 'desc' } })
+export async function GET(req: Request) {
+  const url = new URL(req.url)
+  const q = url.searchParams.get('q') || ''
+  const company = url.searchParams.get('company') || undefined
+  const role = url.searchParams.get('role') || undefined
+  const city = url.searchParams.get('city') || undefined
+
+  const where: any = {}
+
+  // default: exclude soft-deleted records unless explicitly requested
+  // showDeleted param behavior:
+  // - absent: exclude deleted (default)
+  // - '1': include both deleted and non-deleted
+  // - 'only': return only deleted (trashed) records
+  const showDeletedParam = url.searchParams.get('showDeleted')
+
+  // filters
+  if (company) where.company = company
+  if (role) where.role = role
+  if (city) where.city = city
+
+  // search across multiple fields
+  if (q) {
+    where.AND = [
+      ...(where.AND || []),
+      {
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { email: { contains: q, mode: 'insensitive' } },
+          { phone: { contains: q, mode: 'insensitive' } },
+          { company: { contains: q, mode: 'insensitive' } },
+          { role: { contains: q, mode: 'insensitive' } },
+          { city: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+    ]
+  }
+
+  // fetch without relying on Prisma null-matching for deletedAt
+  let contacts = await prisma.contact.findMany({ where, orderBy: { createdAt: 'desc' } })
+
+  if (showDeletedParam === 'only') {
+    contacts = contacts.filter((c: any) => c.deletedAt != null)
+  } else if (showDeletedParam === '1') {
+    // include both deleted and non-deleted: no further filtering
+  } else {
+    // default: exclude deleted
+    contacts = contacts.filter((c: any) => c.deletedAt == null)
+  }
+
   return NextResponse.json(contacts)
 }
 

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { prisma } from '../../lib/prisma'
 
 export const dynamic = 'force-dynamic'
-import ContactList from '../../components/ContactList'
+import ContactsView from '../../components/ContactsView'
 
 function formatDate(value: any) {
   const d = value instanceof Date ? value : new Date(value)
@@ -17,7 +17,7 @@ function formatDate(value: any) {
 }
 
 export default async function ContactsPage() {
-  const contacts = await prisma.contact.findMany({ orderBy: { createdAt: 'desc' } })
+  // keep server rendered header but let the client handle searching/fetching
 
   return (
     <section className="grid gap-4">
@@ -31,7 +31,7 @@ export default async function ContactsPage() {
         </Link>
       </div>
 
-         <ContactList contacts={contacts} />
+      <ContactsView />
     </section>
   )
 }
