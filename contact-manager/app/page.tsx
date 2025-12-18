@@ -21,7 +21,6 @@ export default function Home() {
               <li>MongoDB Atlas Persistence (Prisma)</li>
               <li>Additional Contact Fields (company, role, city,phone,email, birthdate,city)</li>
               <li>Inline Missing‑Field Hints</li>
-              <li>Inline Duplicate UI Feedback</li>
               <li>NextAuth (GitHub) Integration</li>
               <li>Notes Sentiment (stub)</li>
             </ul>
