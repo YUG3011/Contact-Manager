@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </header>
 
-            <main className="container-app flex-1 py-8">{children}</main>
+            <main className="container-app flex-1 py-8 pt-0">{children}</main>
 
             <footer className="border-t border-slate-200 bg-white">
               <div className="container-app py-6 text-sm text-slate-600 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

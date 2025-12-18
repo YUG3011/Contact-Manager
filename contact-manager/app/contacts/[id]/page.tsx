@@ -48,9 +48,37 @@ export default async function ContactPage({ params }: { params: { id: string } }
           </div>
 
           <div>
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Company</div>
+            <div className="mt-1">
+              <CopyField value={contact.company} />
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Role</div>
+            <div className="mt-1">
+              <CopyField value={contact.role} />
+            </div>
+          </div>
+
+          <div>
             <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Phone</div>
             <div className="mt-1">
               <CopyField value={contact.phone || '—'} copy={Boolean(contact.phone)} />
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">City</div>
+            <div className="mt-1">
+              <CopyField value={contact.city || '—'} copy={Boolean(contact.city)} />
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Birthdate</div>
+            <div className="mt-1">
+              <CopyField value={contact.birthdate || '—'} copy={Boolean(contact.birthdate)} />
             </div>
           </div>
 

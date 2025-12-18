@@ -6,12 +6,13 @@ export default function ContactList({ contacts }: { contacts: any[] }) {
   function formatDate(value: any) {
     const d = value instanceof Date ? value : new Date(value)
     if (Number.isNaN(d.getTime())) return ''
-    return d.toLocaleString(undefined, {
+    return d.toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: true,
     })
   }
 
@@ -26,11 +27,23 @@ export default function ContactList({ contacts }: { contacts: any[] }) {
         {contacts.map((c: any) => (
           <div key={c.id} className="p-5 flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <div className="font-medium truncate">{c.name}</div>
+              <div className="font-medium truncate">
+                {c.name}
+                <span className="text-slate-400"> · </span>
+                {c.phone || '—'}
+              </div>
               <div className="mt-1 text-sm text-slate-600 truncate">
                 {c.email}
                 <span className="text-slate-300"> · </span>
-                {c.phone || '—'}
+                {c.company || '—'}
+                <span className="text-slate-300"> · </span>
+                {c.role || '—'}
+                {c.city ? (
+                  <>
+                    <span className="text-slate-300"> · </span>
+                    {c.city}
+                  </>
+                ) : null}
               </div>
               <div className="mt-1 text-xs text-slate-500">
                 Created: {formatDate(c.createdAt)}

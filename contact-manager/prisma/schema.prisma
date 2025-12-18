@@ -12,6 +12,10 @@ model Contact {
   name    String
   email   String
   phone   String?
+  city    String?
+  company String?
+  role    String?
+  birthdate String?
   notes   String?
   createdAt DateTime @default(now())
 }
