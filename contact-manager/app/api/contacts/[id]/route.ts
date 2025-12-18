@@ -1,5 +1,7 @@
+
 import { NextResponse } from 'next/server'
 import { prisma } from '../../../../lib/prisma'
+import { revalidatePath } from 'next/cache'
 
 export async function GET(req: Request, context: any) {
   const resolvedParams = await Promise.resolve(context.params)
@@ -15,6 +17,7 @@ export async function PATCH(req: Request, context: any) {
     const { id } = resolvedParams as { id: string }
     const body = await req.json()
     const updated = await prisma.contact.update({ where: { id }, data: body })
+    revalidatePath('/contacts')
     return NextResponse.json(updated)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Update failed'
