@@ -57,11 +57,7 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
       // Give a brief moment so the user can see the success message.
       await new Promise((r) => setTimeout(r, 800))
 
-      if (isEdit) {
-        window.location.href = `/contacts/${initial.id}`
-      } else {
-        window.location.href = '/contacts'
-      }
+      window.location.href = '/contacts'
     } catch (err) {
       const message = err instanceof Error ? err.message : ''
       setError(message ? `Save failed: ${message}` : 'Save failed')
