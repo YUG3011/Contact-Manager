@@ -17,17 +17,11 @@ export default function Home() {
               <li>Duplicate Detection</li>
               <li>Create / Read / Update / Delete Contacts</li>
               <li>MongoDB Atlas Persistence (Prisma)</li>
-              <li>Additional Contact Fields (company, role, city, birthdate)</li>
-              <li>Compact Two‑Column Contact Form</li>
+              <li>Additional Contact Fields (company, role, city,phone,email, birthdate,city)</li>
               <li>Inline Missing‑Field Hints</li>
               <li>Inline Duplicate UI Feedback</li>
-              <li>Contact List Enhancements (phone, company, role, city)</li>
               <li>NextAuth (GitHub) Integration</li>
-              <li>Health Endpoint</li>
-              <li>Prisma Generation on Install/Build</li>
-              <li>Server‑Side Guarding of Secrets</li>
               <li>Notes Sentiment (stub)</li>
-              <li>Local Dev Fallback</li>
             </ul>
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
