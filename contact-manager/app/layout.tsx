@@ -49,20 +49,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <div className="flex items-center gap-4">
                   <a
                     className="hover:text-slate-900 transition-colors"
-                    href="https://github.com/YUG3011"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    GitHub
-                  </a>
-                  <a
-                    className="hover:text-slate-900 transition-colors"
                     href="https://www.linkedin.com/in/yug-vachhani-bb4133251/"
                     target="_blank"
                     rel="noreferrer"
                   >
                     LinkedIn
                   </a>
+                  <a
+                    className="hover:text-slate-900 transition-colors"
+                    href="https://github.com/YUG3011"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    GitHub
+                  </a>
+                  
                 </div>
               </div>
             </footer>
