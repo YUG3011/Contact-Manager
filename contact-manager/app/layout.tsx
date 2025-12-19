@@ -1,4 +1,5 @@
 import './globals.css'
+import { Analytics } from '@vercel/analytics/next'
 import Providers from './providers'
 import AuthButton from '../components/AuthButton'
 import ThemeToggle from '../components/ThemeToggle'
@@ -79,6 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </footer>
           </div>
         </Providers>
+         <Analytics />
       </body>
     </html>
   )
