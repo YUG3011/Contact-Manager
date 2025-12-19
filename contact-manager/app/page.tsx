@@ -23,6 +23,8 @@ export default function Home() {
               <li>Inline Missing‑Field Hints</li>
               <li>NextAuth (GitHub) Integration</li>
               <li>Notes Sentiment (stub)</li>
+              <li>Category‑wise A–Z grouping & Alphabet Navigator</li>
+              <li>Favorites (star) — implemented as a copy shown in a Favorites section while leaving contacts in their A–Z groups</li>
             </ul>
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
