@@ -10,8 +10,11 @@ export const metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Don't force `dark` on the server — apply a small inline script that runs
+  // on the client before React hydrates so the theme can match the user's
+  // stored preference and avoid hydration mismatches.
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className="min-h-screen">
         <Providers>
           <div className="min-h-screen flex flex-col">

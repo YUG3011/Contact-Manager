@@ -1,17 +1,40 @@
 import Link from 'next/link'
-import { prisma } from '../../../lib/prisma'
 import CopyField from '../../../components/CopyField'
 import RestoreContactButton from '../../../components/RestoreContactButton'
+import { headers } from 'next/headers'
 
-export default async function ContactPage({ params }: { params: { id: string } }) {
+type PageProps = {
+  params: { id: string }
+  searchParams?: Promise<{ from?: string }>
+}
+
+export const dynamic = 'force-dynamic'
+
+async function getContact(id: string) {
+  const h = await headers()
+  const proto = h.get('x-forwarded-proto') ?? 'http'
+  const host = h.get('x-forwarded-host') ?? h.get('host')
+  const baseUrl = host ? `${proto}://${host}` : (process.env.NEXTAUTH_URL ?? '')
+
+  const res = await fetch(`${baseUrl}/api/contacts/${id}?includeDeleted=1`, {
+    // Ensure we don't cache per-contact reads in dev or prod.
+    cache: 'no-store',
+  })
+
+  if (!res.ok) return null
+  return res.json()
+}
+
+export default async function ContactPage({ params, searchParams }: PageProps) {
   const resolvedParams = await Promise.resolve(params)
-  const contact = await prisma.contact.findUnique({ where: { id: resolvedParams.id } })
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const contact = await getContact(resolvedParams.id)
   if (!contact) {
     return (
       <section className="grid gap-4">
         <div className="card p-6">
           <div className="text-lg font-medium">Contact not found</div>
-          <div className="mt-1 text-sm text-slate-600">The contact may have been deleted.</div>
+          <div className="mt-1 text-sm text-slate-600">The contact may not exist or you may not have access.</div>
           <div className="mt-4">
             <Link className="btn-secondary" href="/contacts">
               Back to contacts
@@ -30,7 +53,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
           <p className="mt-1 text-sm text-slate-600">Contact details</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/contacts" className="btn-ghost">
+          <Link href={resolvedSearchParams?.from === 'trash' ? '/contacts/trash' : '/contacts'} className="btn-ghost">
             Back
           </Link>
           {contact.deletedAt ? (
@@ -49,53 +72,43 @@ export default async function ContactPage({ params }: { params: { id: string } }
       </div>
 
       <div className="card p-6">
-        <div className="grid gap-4">
-          <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Email</div>
-            <div className="mt-1">
-              <CopyField value={contact.email} />
+        <div className="space-y-3">
+          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-1">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Email</dt>
+              <dd className="mt-1"><CopyField value={contact.email} /></dd>
             </div>
-          </div>
 
-          <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Company</div>
-            <div className="mt-1">
-              <CopyField value={contact.company} />
+            <div className="sm:col-span-1">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Company</dt>
+              <dd className="mt-1"><CopyField value={contact.company} /></dd>
             </div>
-          </div>
 
-          <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Role</div>
-            <div className="mt-1">
-              <CopyField value={contact.role} />
+            <div className="sm:col-span-1">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Role</dt>
+              <dd className="mt-1"><CopyField value={contact.role} /></dd>
             </div>
-          </div>
 
-          <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Phone</div>
-            <div className="mt-1">
-              <CopyField value={contact.phone || '—'} copy={Boolean(contact.phone)} />
+            <div className="sm:col-span-1">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Phone</dt>
+              <dd className="mt-1"><CopyField value={contact.phone || '—'} copy={Boolean(contact.phone)} /></dd>
             </div>
-          </div>
 
-          <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">City</div>
-            <div className="mt-1">
-              <CopyField value={contact.city || '—'} copy={Boolean(contact.city)} />
+            <div className="sm:col-span-1">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">City</dt>
+              <dd className="mt-1"><CopyField value={contact.city || '—'} copy={Boolean(contact.city)} /></dd>
             </div>
-          </div>
 
-          <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Birthdate</div>
-            <div className="mt-1">
-              <CopyField value={contact.birthdate || '—'} copy={Boolean(contact.birthdate)} />
+            <div className="sm:col-span-1">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Birthdate</dt>
+              <dd className="mt-1"><CopyField value={contact.birthdate || '—'} copy={Boolean(contact.birthdate)} /></dd>
             </div>
-          </div>
 
-          <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Notes</div>
-            <div className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">{contact.notes || '—'}</div>
-          </div>
+            <div className="sm:col-span-2">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Notes</dt>
+              <dd className="mt-1 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{contact.notes || '—'}</dd>
+            </div>
+          </dl>
         </div>
       </div>
     </section>

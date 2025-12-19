@@ -1,6 +1,28 @@
 import Link from 'next/link'
+import FeatureList from '../components/FeatureList'
 
 export default function Home() {
+  const items = [
+    'AI Smart Filll',
+    'AI Name Suggestions',
+    'Filter & Search (professional search and filters))',
+    'Trash (soft-delete, restore, permanent delete))',
+    'Email Auto‑Generators',
+    'Duplicate Detections',
+    'Create / Read / Update / Delete Contactss',
+    'MongoDB Atlas Persistence (Prisma))',
+    'Additional Contact Fields (company, role, city,phone,email, birthdate,city))',
+    'Inline Missing‑Field Hints',
+    'NextAuth (GitHub) Integration',
+    'Notes Sentiment (stub)',
+    'Category‑wise A–Z grouping & Alphabet Navigator',
+    'Favorites (star) — implemented as a copy shown in a Favorites section while leaving contacts in their A–Z groups',
+    'Undo Last Action',
+    'Temporary Contacts Mode(For Delete)',
+    'Last Updated Badge',
+    'Filter By Details',
+  ]
+
   return (
     <section className="grid gap-6">
       <div className="card p-8">
@@ -10,22 +32,7 @@ export default function Home() {
             Manage your contacts in one place.
           </h1>
           <div className="mt-3 text-slate-600">
-            <ul className="list-inside list-disc space-y-1">
-              <li>AI Smart Fill</li>
-              <li>AI Name Suggest</li>
-              <li>Filter &amp; Search (professional search and filters)</li>
-              <li>Trash (soft-delete, restore, permanent delete)</li>
-              <li>Email Auto‑Generator</li>
-              <li>Duplicate Detection</li>
-              <li>Create / Read / Update / Delete Contacts</li>
-              <li>MongoDB Atlas Persistence (Prisma)</li>
-              <li>Additional Contact Fields (company, role, city,phone,email, birthdate,city)</li>
-              <li>Inline Missing‑Field Hints</li>
-              <li>NextAuth (GitHub) Integration</li>
-              <li>Notes Sentiment (stub)</li>
-              <li>Category‑wise A–Z grouping & Alphabet Navigator</li>
-              <li>Favorites (star) — implemented as a copy shown in a Favorites section while leaving contacts in their A–Z groups</li>
-            </ul>
+            <FeatureList items={items} />
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/contacts" className="btn-primary">

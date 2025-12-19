@@ -12,6 +12,7 @@ const ContactSchema = z.object({
   birthdate: z.string().optional(),
   notes: z.string().optional(),
   favorite: z.boolean().optional(),
+  // priority and expiresAt removed from create/edit form per request
 })
 
 export default function ContactForm({ initial }: { initial?: any } = {}) {
@@ -25,6 +26,7 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
     birthdate: initial?.birthdate ?? '',
     notes: initial?.notes ?? '',
     favorite: initial?.favorite ?? false,
+    // priority and expiresAt intentionally omitted from the form
   })
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -142,6 +144,7 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
         birthdate: form.birthdate?.trim() ? form.birthdate : null,
         notes: form.notes?.trim() ? form.notes : null,
         favorite: Boolean(form.favorite),
+        // priority and expiresAt intentionally not included here; autodelete is managed from the contact actions menu
       }
 
       const url = isEdit ? `/api/contacts/${initial.id}` : '/api/contacts'
@@ -179,7 +182,12 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
       // Give a brief moment so the user can see the success message.
       await new Promise((r) => setTimeout(r, 800))
 
-      window.location.href = '/contacts'
+      // Redirect back to the contacts list and include a query param
+      // so the list page can show a confirmation toast and refetch.
+      const params = new URLSearchParams()
+      params.set('updated', isEdit ? '1' : '1')
+      if (isEdit && initial?.id) params.set('id', String(initial.id))
+      window.location.href = `/contacts?${params.toString()}`
     } catch (err) {
       const message = err instanceof Error ? err.message : ''
       setError(message ? `Save failed: ${message}` : 'Save failed')
@@ -388,6 +396,7 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
                 placeholder="Optional notes…"
               />
             </div>
+            {/* Priority and Temporary fields removed from the new/edit form by request. */}
           </div>
         </div>
       </div>

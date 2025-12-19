@@ -6,8 +6,62 @@ import { revalidatePath } from 'next/cache'
 export async function GET(req: Request, context: any) {
   const resolvedParams = await Promise.resolve(context.params)
   const { id } = resolvedParams as { id: string }
-  const contact = await prisma.contact.findFirst({ where: { id, deletedAt: null } })
+  const url = new URL(req.url)
+  const includeDeleted = url.searchParams.get('includeDeleted') === '1'
+  // Avoid Prisma crashing if legacy data has invalid values (e.g. updatedAt = null)
+  // by fetching the raw Mongo document via $runCommandRaw.
+  let contact: any = null
+  const toDate = (v: any) => {
+    if (!v) return null
+    if (v instanceof Date) return v
+    if (typeof v === 'string' || typeof v === 'number') {
+      const d = new Date(v)
+      return Number.isNaN(d.getTime()) ? null : d
+    }
+    if (typeof v === 'object' && ('$date' in v)) {
+      const d = new Date((v as any).$date)
+      return Number.isNaN(d.getTime()) ? null : d
+    }
+    return null
+  }
+  try {
+    const result: any = await (prisma as any).$runCommandRaw({
+      find: 'Contact',
+      filter: {
+        _id: { $oid: id },
+        ...(includeDeleted ? {} : { deletedAt: null }),
+      },
+      limit: 1,
+    })
+
+    const first = result?.cursor?.firstBatch?.[0]
+    if (first) {
+      const createdAt = toDate(first.createdAt) ?? new Date(0)
+      const updatedAt = toDate(first.updatedAt) ?? createdAt
+      const deletedAt = toDate(first.deletedAt)
+      const expiresAt = toDate(first.expiresAt)
+      contact = {
+        ...first,
+        id,
+        _id: undefined,
+        createdAt,
+        updatedAt,
+        deletedAt,
+        expiresAt,
+      }
+    }
+  } catch {
+    // If raw Mongo query isn't available, fall back to Prisma.
+    contact = await prisma.contact.findFirst({ where: includeDeleted ? { id } : { id, deletedAt: null } })
+  }
+
   if (!contact) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  // mark lastUsed when a contact is retrieved (viewed) — best effort
+  try {
+    await prisma.contact.update({ where: { id }, data: { lastUsed: new Date() } })
+  } catch {}
+
   return NextResponse.json(contact)
 }
 
@@ -38,7 +92,30 @@ export async function PATCH(req: Request, context: any) {
       body.phone = phoneNorm
     }
 
-    const updated = await prisma.contact.update({ where: { id }, data: body })
+    // allow expiresAt and priority normalization
+    if (body.expiresAt) body.expiresAt = new Date(body.expiresAt)
+    if (typeof body.priority === 'string' && body.priority !== '') body.priority = parseInt(body.priority, 10)
+
+    // Build data object for update. Some generated Prisma clients may not
+    // include newer fields (e.g. expiresAt) if the client wasn't regenerated.
+    // Try updating with the requested fields; on a specific unknown-arg error,
+    // retry without the unsupported fields to avoid throwing a 500.
+    let dataForUpdate: any = { ...body }
+    let updated: any
+    try {
+      updated = await prisma.contact.update({ where: { id }, data: dataForUpdate })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      // Detect Prisma 'Unknown arg' for expiresAt/priority and retry without them
+      if (msg.includes('Unknown arg `expiresAt`') || msg.includes('Unknown arg `priority`')) {
+        // remove unsupported fields and try again
+        delete dataForUpdate.expiresAt
+        delete dataForUpdate.priority
+        updated = await prisma.contact.update({ where: { id }, data: dataForUpdate })
+      } else {
+        throw err
+      }
+    }
     revalidatePath('/contacts')
     return NextResponse.json(updated)
   } catch (err) {
@@ -70,7 +147,21 @@ export async function POST(req: Request, context: any) {
   try {
     const resolvedParams = await Promise.resolve(context.params)
     const { id } = resolvedParams as { id: string }
-    await prisma.contact.update({ where: { id }, data: { deletedAt: null } })
+    // Try to clear deletedAt and any scheduled expiresAt when restoring.
+    // Some Prisma clients may not support `expiresAt` if the client
+    // wasn't regenerated; attempt with expiresAt first and retry without.
+    const dataForUpdate: any = { deletedAt: null, expiresAt: null }
+    try {
+      await prisma.contact.update({ where: { id }, data: dataForUpdate })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('Unknown arg `expiresAt`')) {
+        // retry without expiresAt
+        await prisma.contact.update({ where: { id }, data: { deletedAt: null } })
+      } else {
+        throw err
+      }
+    }
     revalidatePath('/contacts')
     return NextResponse.json({ ok: true })
   } catch (err) {

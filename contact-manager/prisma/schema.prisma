@@ -18,6 +18,10 @@ model Contact {
   birthdate String?
   notes   String?
   favorite Boolean @default(false)
+  updatedAt DateTime @updatedAt
+  lastUsed DateTime?
+  priority Int?
+  expiresAt DateTime?
   createdAt DateTime @default(now())
   deletedAt DateTime?
 }
