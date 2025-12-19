@@ -57,7 +57,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { name, email, phone, notes, city, company, role, birthdate } = body
+    const { name, email, phone, notes, city, company, role, birthdate, favorite } = body
     if (!name || !email || !company || !role)
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
 
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     }
 
     const created = await prisma.contact.create({
-      data: { name, email: emailNorm, phone: phoneNorm || null, notes, city, company, role, birthdate },
+      data: { name, email: emailNorm, phone: phoneNorm || null, notes, city, company, role, birthdate, favorite: Boolean(favorite) },
     })
     return NextResponse.json(created)
   } catch (err) {

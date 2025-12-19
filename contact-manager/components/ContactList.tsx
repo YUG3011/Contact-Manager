@@ -3,7 +3,7 @@ import Link from 'next/link'
 import DeleteContactButton from './DeleteContactButton'
 import RestoreContactButton from './RestoreContactButton'
 
-export default function ContactList({ contacts }: { contacts: any[] }) {
+export default function ContactList({ contacts, showFavorite = true }: { contacts: any[]; showFavorite?: boolean }) {
   function formatDate(value: any) {
     const d = value instanceof Date ? value : new Date(value)
     if (Number.isNaN(d.getTime())) return ''
@@ -51,6 +51,28 @@ export default function ContactList({ contacts }: { contacts: any[] }) {
               </div>
             </div>
             <div className="flex gap-2">
+              {showFavorite ? (
+                <button
+                  title={c.favorite ? 'Unfavorite' : 'Mark favorite'}
+                  onClick={async () => {
+                    try {
+                      await fetch(`/api/contacts/${c.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ favorite: !c.favorite }),
+                      })
+                      // simple refresh to reflect change
+                      window.location.reload()
+                    } catch (err) {
+                      console.error(err)
+                      window.alert('Failed to update favorite')
+                    }
+                  }}
+                  className={`rounded-full p-2 text-sm ${c.favorite ? 'bg-yellow-100 text-yellow-600' : 'bg-white text-slate-600'}`}
+                >
+                  {c.favorite ? '★' : '☆'}
+                </button>
+              ) : null}
               <Link href={`/contacts/${c.id}`} className="btn-secondary shrink-0">
                 View
               </Link>

@@ -11,6 +11,7 @@ const ContactSchema = z.object({
   role: z.string().min(1, 'Role is required'),
   birthdate: z.string().optional(),
   notes: z.string().optional(),
+  favorite: z.boolean().optional(),
 })
 
 export default function ContactForm({ initial }: { initial?: any } = {}) {
@@ -23,6 +24,7 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
     role: initial?.role ?? '',
     birthdate: initial?.birthdate ?? '',
     notes: initial?.notes ?? '',
+    favorite: initial?.favorite ?? false,
   })
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -139,6 +141,7 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
         role: form.role,
         birthdate: form.birthdate?.trim() ? form.birthdate : null,
         notes: form.notes?.trim() ? form.notes : null,
+        favorite: Boolean(form.favorite),
       }
 
       const url = isEdit ? `/api/contacts/${initial.id}` : '/api/contacts'
@@ -225,7 +228,8 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
                   Describe the contact (e.g., "Rahul, works at Infosys, React dev, Bangalore").
                 </p>
               </div>
-              <button
+              <div className="flex items-center gap-2">
+                <button
                 type="button"
                 onClick={handleSmartFill}
                 disabled={smartLoading || !smartInput.trim()}
@@ -233,6 +237,15 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
               >
                 {smartLoading ? 'Filling...' : 'Smart Fill'}
               </button>
+                <button
+                  type="button"
+                  title={form.favorite ? 'Unfavorite' : 'Mark as favorite'}
+                  onClick={() => setForm((f) => ({ ...f, favorite: !f.favorite }))}
+                  className={`rounded-full p-2 text-sm ${form.favorite ? 'bg-yellow-100 text-yellow-600' : 'bg-white text-slate-600'}`}
+                >
+                  {form.favorite ? '★' : '☆'}
+                </button>
+              </div>
             </div>
             <textarea
               value={smartInput}

@@ -17,6 +17,7 @@ model Contact {
   role    String?
   birthdate String?
   notes   String?
+  favorite Boolean @default(false)
   createdAt DateTime @default(now())
   deletedAt DateTime?
 }
