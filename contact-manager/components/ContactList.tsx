@@ -97,16 +97,7 @@ export default function ContactList({
                     <span className="text-slate-500">{c.email}</span>
                   </div>
 
-                  {c.updatedAt ? (
-                    <div className="mt-2">
-                      <span
-                        title={formatDate(c.updatedAt)}
-                        className="inline-block text-xs font-medium text-slate-600 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full"
-                      >
-                        Updated {relativeTime(c.updatedAt)}
-                      </span>
-                    </div>
-                  ) : null}
+                  {/* Updated badge moved to the right side to sit at the bottom-right */}
 
                   {scheduledDelete && expiresAt ? (
                     <div className="mt-2">
@@ -121,14 +112,27 @@ export default function ContactList({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/contacts/${c.id}${isTrash ? '?from=trash' : ''}`}
-                    className="btn-secondary shrink-0"
-                  >
-                    View
-                  </Link>
-                  <ContactActionsMenu contact={c} onAction={onAction} showFavorite={showFavorite} isTrash={isTrash} />
+                <div className="flex flex-col items-end justify-between h-full gap-2">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/contacts/${c.id}${isTrash ? '?from=trash' : ''}`}
+                      className="btn-secondary shrink-0"
+                    >
+                      View
+                    </Link>
+                    <ContactActionsMenu contact={c} onAction={onAction} showFavorite={showFavorite} isTrash={isTrash} />
+                  </div>
+
+                  {c.updatedAt ? (
+                    <div>
+                      <span
+                        title={formatDate(c.updatedAt)}
+                        className="inline-block text-[11px] font-normal text-slate-600 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full"
+                      >
+                        updated {relativeTime(c.updatedAt)}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             )
