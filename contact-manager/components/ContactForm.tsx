@@ -1,5 +1,6 @@
 "use client"
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import VoiceIcon from './VoiceIcon'
 import { z } from 'zod'
 
 const ContactSchema = z.object({
@@ -15,7 +16,7 @@ const ContactSchema = z.object({
   // priority and expiresAt removed from create/edit form per request
 })
 
-export default function ContactForm({ initial }: { initial?: any } = {}) {
+export default function ContactForm({ initial, showVoice = true }: { initial?: any; showVoice?: boolean } = {}) {
   const [form, setForm] = useState({
     name: initial?.name ?? '',
     email: initial?.email ?? '',
@@ -35,6 +36,8 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
   const [deleting, setDeleting] = useState(false)
   const [smartInput, setSmartInput] = useState('')
   const [smartLoading, setSmartLoading] = useState(false)
+  const [listening, setListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
   const [autoEmail, setAutoEmail] = useState(true)
   const [missing, setMissing] = useState<Record<string, boolean>>({})
   const [duplicate, setDuplicate] = useState<{ email?: boolean; phone?: boolean }>({})
@@ -55,6 +58,77 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
     setDuplicate((d) => ({ ...d, email: false }))
   }, [form.name, form.birthdate, autoEmail])
 
+  // Setup Web Speech API for Smart Fill voice input
+  useEffect(() => {
+    const w = (window as any)
+    const SpeechRecognition = w.SpeechRecognition || w.webkitSpeechRecognition
+    if (!SpeechRecognition) return
+    const r = new SpeechRecognition()
+    r.lang = 'en-US'
+    r.interimResults = true
+    r.continuous = false
+
+    r.onresult = (ev: any) => {
+      const last = ev.results[ev.results.length - 1]
+      const text = last[0].transcript
+      // show interim results while listening, apply autocorrect on final
+      if (last.isFinal) {
+        setSmartInput((prev) => (prev ? `${prev} ${simpleAutoCorrect(text)}` : simpleAutoCorrect(text)))
+      } else {
+        // replace last interim text visually
+        setSmartInput((prev) => {
+          // if previous text ends with interim (best-effort), replace it; otherwise append
+          return text
+        })
+      }
+    }
+
+    r.onend = () => {
+      setListening(false)
+    }
+
+    recognitionRef.current = r
+    return () => {
+      try { r.stop() } catch { }
+    }
+  }, [])
+
+  function toggleListen() {
+    const r = recognitionRef.current
+    if (!r) return alert('Voice not supported in this browser')
+    if (listening) {
+      try { r.stop() } catch {}
+      setListening(false)
+    } else {
+      try {
+        r.start()
+        setListening(true)
+      } catch (err) {
+        console.error('speech start error', err)
+      }
+    }
+  }
+
+  function simpleAutoCorrect(input: string) {
+    if (!input) return input
+    let t = input.trim().replace(/\s+/g, ' ')
+    const map: Record<string, string> = {
+      teh: 'the',
+      recieve: 'receive',
+      adress: 'address',
+      devloper: 'developer',
+      manger: 'manager',
+    }
+
+    t = t
+      .split(' ')
+      .map((tok) => map[tok.toLowerCase()] ?? tok)
+      .join(' ')
+
+    t = t.replace(/\s+at\s+/gi, '@').replace(/\s+dot\s+/gi, '.')
+    return t
+  }
+
   async function handleSmartFill() {
     const text = smartInput.trim()
     if (!text) {
@@ -66,10 +140,11 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
     setSuccess(null)
     setSmartLoading(true)
     try {
+      const corrected = simpleAutoCorrect(text)
       const res = await fetch('/api/ai-auto-fill', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: text }),
+        body: JSON.stringify({ input: corrected }),
       })
 
       if (!res.ok) {
@@ -238,13 +313,25 @@ export default function ContactForm({ initial }: { initial?: any } = {}) {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                type="button"
-                onClick={handleSmartFill}
-                disabled={smartLoading || !smartInput.trim()}
-                className="rounded-md bg-black px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:bg-black/50"
-              >
-                {smartLoading ? 'Filling...' : 'Smart Fill'}
-              </button>
+                  type="button"
+                  onClick={handleSmartFill}
+                  disabled={smartLoading || !smartInput.trim()}
+                  className="rounded-md bg-black px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:bg-black/50"
+                >
+                  {smartLoading ? 'Filling...' : 'Smart Fill'}
+                </button>
+
+                {showVoice ? (
+                  <button
+                    type="button"
+                    onClick={toggleListen}
+                    title={listening ? 'Stop listening' : 'Voice input'}
+                    className={`rounded-full p-2 text-sm ${listening ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600'} shadow-sm`}
+                  >
+                    <VoiceIcon active={listening} className="h-4 w-4" />
+                  </button>
+                ) : null}
+
                 <button
                   type="button"
                   title={form.favorite ? 'Unfavorite' : 'Mark as favorite'}

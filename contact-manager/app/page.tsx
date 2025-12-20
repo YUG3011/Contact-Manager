@@ -3,6 +3,9 @@ import FeatureList from '../components/FeatureList'
 
 export default function Home() {
   const items = [
+    'AI Search Suggestionss',
+    'AI Search Understandings',
+    'Voice-to-text searchs',
     'AI Smart Filll',
     'AI Name Suggestions',
     'Filter & Search (professional search and filters))',
@@ -11,7 +14,7 @@ export default function Home() {
     'Duplicate Detections',
     'Create / Read / Update / Delete Contactss',
     'MongoDB Atlas Persistence (Prisma))',
-    'Additional Contact Fields (company, role, city,phone,email, birthdate,city))',
+    'Additional Contact Fields (company, role, city,phone,email, birthdate,city)',
     'Inline Missing‑Field Hints',
     'NextAuth (GitHub) Integration',
     'Notes Sentiment (stub)',

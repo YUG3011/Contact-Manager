@@ -1,5 +1,7 @@
 "use client"
 import React, { useEffect, useMemo, useState } from 'react'
+import SearchBar from './SearchBar'
+import SearchExamples from './SearchExamples'
 import ContactList from './ContactList'
 
 function useDebounced(value: string, delay = 300) {
@@ -54,15 +56,11 @@ export default function ContactsView({ initial = [], initialDeletedMode = 'exclu
     async function fetchContacts() {
       setLoading(true)
       try {
-        const params = new URLSearchParams()
-        if (debouncedQ) params.set('q', debouncedQ)
-        if (city) params.set('city', city)
-        if (company) params.set('company', company)
-        if (role) params.set('role', role)
-        if (sort) params.set('sort', sort)
-        if (deletedMode === 'include') params.set('showDeleted', '1')
-        if (deletedMode === 'only') params.set('showDeleted', 'only')
-        const res = await fetch(`/api/contacts?${params.toString()}`, { cache: 'no-store' })
+        const payload: any = { q: debouncedQ, city: city || undefined, company: company || undefined, role: role || undefined, sort }
+        if (deletedMode === 'include') payload.showDeleted = '1'
+        if (deletedMode === 'only') payload.showDeleted = 'only'
+
+        const res = await fetch('/api/search', { method: 'POST', body: JSON.stringify(payload), cache: 'no-store', headers: { 'Content-Type': 'application/json' } })
         if (!res.ok) throw new Error('fetch failed')
         const data = await res.json()
         if (mounted) setContacts(data)
@@ -223,6 +221,9 @@ export default function ContactsView({ initial = [], initialDeletedMode = 'exclu
     try {
       if (lastAction.type === 'delete') {
         await fetch(`/api/contacts/${lastAction.id}`, { method: 'POST' })
+      } else if (lastAction.type === 'restore') {
+        // undo a restore by re-deleting (move back to trash)
+        await fetch(`/api/contacts/${lastAction.id}`, { method: 'DELETE' })
       } else if (lastAction.type === 'favorite') {
         await fetch(`/api/contacts/${lastAction.id}`, {
           method: 'PATCH',
@@ -264,12 +265,13 @@ export default function ContactsView({ initial = [], initialDeletedMode = 'exclu
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3 w-full">
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search contacts..." className="w-full input" />
+            {/* SearchBar handles text + voice input */}
+            <SearchBar value={q} onChange={(v: string) => setQ(v)} />
             <div className="hidden sm:flex items-center gap-2">
               <select value={city} onChange={(e) => setCity(e.target.value)} className="input w-36">
                 <option value="">City</option>
-                {options.cities.map((c) => (
-                  <option key={c} value={c}>
+                {options.cities.map((c, i) => (
+                  <option key={c ?? `city-${i}`} value={c}>
                     {c}
                   </option>
                 ))}
@@ -277,8 +279,8 @@ export default function ContactsView({ initial = [], initialDeletedMode = 'exclu
 
               <select value={company} onChange={(e) => setCompany(e.target.value)} className="input w-36">
                 <option value="">Company</option>
-                {options.companies.map((c) => (
-                  <option key={c} value={c}>
+                {options.companies.map((c, i) => (
+                  <option key={c ?? `company-${i}`} value={c}>
                     {c}
                   </option>
                 ))}
@@ -286,8 +288,8 @@ export default function ContactsView({ initial = [], initialDeletedMode = 'exclu
 
               <select value={role} onChange={(e) => setRole(e.target.value)} className="input w-36">
                 <option value="">Role</option>
-                {options.roles.map((r) => (
-                  <option key={r} value={r}>
+                {options.roles.map((r, i) => (
+                  <option key={r ?? `role-${i}`} value={r}>
                     {r}
                   </option>
                 ))}
@@ -300,6 +302,9 @@ export default function ContactsView({ initial = [], initialDeletedMode = 'exclu
           <div className="flex items-center gap-2">&nbsp;</div>
         </div>
 
+        {/* Example queries that populate the search when clicked */}
+        <SearchExamples onSelect={(s) => setQ(s)} />
+
         <div className="relative">
           {loading ? (
             <div className="p-4 text-sm text-slate-500">Loading…</div>
@@ -307,9 +312,25 @@ export default function ContactsView({ initial = [], initialDeletedMode = 'exclu
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_64px] gap-6">
               <div>
                 {allowFavorites && favorites.length > 0 && (
-                  <div className="mb-4">
+                    <div className="mb-4">
                     <div className="text-sm font-medium mb-2">Favorites</div>
-                    <ContactList contacts={favorites} showFavorite={allowFavorites} onAction={(a: any) => setLastAction(a)} isTrash={(deletedMode as any) === 'only'} />
+                    <ContactList
+                      contacts={favorites}
+                      showFavorite={allowFavorites}
+                      onAction={(a: any) => {
+                        if (!a) return
+                        if (a.type === 'permanent-delete') {
+                          // Immediately refresh and show a brief success message (no Undo)
+                          setReloadKey((k) => k + 1)
+                          setSuccessMessage('Contact permanently deleted')
+                          // auto-hide the success message after TOAST_DURATION
+                          window.setTimeout(() => setSuccessMessage(null), TOAST_DURATION)
+                          return
+                        }
+                        setLastAction(a)
+                      }}
+                      isTrash={(deletedMode as any) === 'only'}
+                    />
                   </div>
                 )}
 
@@ -337,7 +358,21 @@ export default function ContactsView({ initial = [], initialDeletedMode = 'exclu
                           <div className="text-sm font-semibold text-slate-700">{letter}</div>
                         </div>
                       </div>
-                      <ContactList contacts={group} showFavorite={allowFavorites} onAction={(a: any) => setLastAction(a)} isTrash={(deletedMode as any) === 'only'} />
+                      <ContactList
+                        contacts={group}
+                        showFavorite={allowFavorites}
+                        onAction={(a: any) => {
+                          if (!a) return
+                          if (a.type === 'permanent-delete') {
+                            setReloadKey((k) => k + 1)
+                            setSuccessMessage('Contact permanently deleted')
+                            window.setTimeout(() => setSuccessMessage(null), TOAST_DURATION)
+                            return
+                          }
+                          setLastAction(a)
+                        }}
+                        isTrash={(deletedMode as any) === 'only'}
+                      />
                     </div>
                   )
                 })}

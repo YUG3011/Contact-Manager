@@ -72,7 +72,28 @@ export default function ContactList({
             </div>
           </div>
         ) : (
-          contacts.map((c) => {
+          (() => {
+            const seenBaseKeys = new Set<string>()
+            return contacts.map((c, idx) => {
+            // compute a robust key: prefer explicit id, then _id, then email
+            // but append the current index to guarantee uniqueness in the list render.
+            // Also keep a separate dev-time set for the base key (without index) to
+            // surface underlying duplicate id/_id/email values coming from the data.
+            const rawKey = c?.id ?? c?._id ?? c?.email ?? null
+            const baseKey = rawKey == null ? `contact` : String(rawKey)
+            const itemKey = `${baseKey}-${idx}`
+
+            // dev-time duplicate detection (non-spammy): we only care about
+            // underlying duplicate ids/emails coming from the data.
+            // We intentionally do NOT error on itemKey because itemKey includes the
+            // index and is expected to be unique.
+            if (process.env.NODE_ENV !== 'production') {
+              if (seenBaseKeys.has(baseKey)) {
+                console.warn('Duplicate contact base key detected:', baseKey, c)
+              } else {
+                seenBaseKeys.add(baseKey)
+              }
+            }
             const expiresAtRaw = c?.expiresAt ? new Date(c.expiresAt) : null
             const expiresAt = expiresAtRaw && !Number.isNaN(expiresAtRaw.getTime()) ? expiresAtRaw : null
             const scheduledDelete = Boolean(expiresAt)
@@ -81,7 +102,7 @@ export default function ContactList({
 
             return (
               <div
-                key={c.id}
+                key={itemKey}
                 className={`p-5 flex items-center justify-between gap-4 ${
                   scheduledDelete
                     ? isTrash
@@ -137,6 +158,7 @@ export default function ContactList({
               </div>
             )
           })
+          })()
         )}
       </div>
     </div>
