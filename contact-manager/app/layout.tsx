@@ -59,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
                 <div className="flex items-center gap-4">
                   <a
-                    className="hover:text-slate-900 transition-colors"
+                    className="hover:text-slate-900 dark:hover:text-slate-50 transition-colors"
                     href="https://www.linkedin.com/in/yug-vachhani-bb4133251/"
                     target="_blank"
                     rel="noreferrer"
@@ -67,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     LinkedIn
                   </a>
                   <a
-                    className="hover:text-slate-900 transition-colors"
+                    className="hover:text-slate-900 dark:hover:text-slate-50 transition-colors"
                     href="https://github.com/YUG3011"
                     target="_blank"
                     rel="noreferrer"
